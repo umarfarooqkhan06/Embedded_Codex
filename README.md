@@ -6,7 +6,11 @@ This repository collects various embedded systems projects. Directories are orga
 
 - **ARM/** – Projects for ARM Cortex boards. The `Nucleo_64` folder contains a sample STM32F401RE project (`F401RE_MAX30102_HR_SPO2_1`).
 - **AVR/** – Placeholder for projects targeting AVR microcontrollers.
+//<<<<<<< ulxb08-codex/add-dht11-sensor-logging-to-firebase
 - **ESP/** – Directories for ESP32 and ESP8266 code. The ESP8266 folder now includes a Firebase logging example that also uses an OLED display.
+=======
+- **ESP/** – Directories for ESP32 and ESP8266 code. The ESP8266 folder now includes a Firebase logging example.
+//>>>>>>> main
 
 ## Building projects
 
