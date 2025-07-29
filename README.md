@@ -6,7 +6,7 @@ This repository collects various embedded systems projects. Directories are orga
 
 - **ARM/** – Projects for ARM Cortex boards. The `Nucleo_64` folder contains a sample STM32F401RE project (`F401RE_MAX30102_HR_SPO2_1`).
 - **AVR/** – Placeholder for projects targeting AVR microcontrollers.
-- **ESP/** – Directories for ESP32 and ESP8266 code.
+- **ESP/** – Directories for ESP32 and ESP8266 code. The ESP8266 folder now includes a Firebase logging example.
 
 ## Building projects
 
@@ -14,6 +14,4 @@ This repository collects various embedded systems projects. Directories are orga
 The project under `ARM/Nucleo_64/STM32F401RE/F401RE_MAX30102_HR_SPO2_1` was created with STM32CubeIDE. To build it you can either open the directory in STM32CubeIDE or run `make` inside the `Debug` subdirectory if the ARM GCC toolchain is installed.
 
 ### AVR and ESP
-These folders currently contain no code but serve as placeholders for future projects.
-
-
+These folders contain example sketches that can be built with the Arduino IDE.
