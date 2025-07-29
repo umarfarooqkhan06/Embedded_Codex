@@ -1,6 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>
 #include <FirebaseArduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #define DHTPIN 2          // D4 on NodeMCU boards
 #define DHTTYPE DHT11
@@ -13,11 +16,27 @@ const char* firebaseAuth = "YOUR_DATABASE_SECRET";
 
 DHT dht(DHTPIN, DHTTYPE);
 
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 void setup() {
   Serial.begin(115200);
   delay(100);
 
   dht.begin();
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("SSD1306 allocation failed");
+    for (;;) {}
+  }
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Connecting...");
+  display.display();
 
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
@@ -28,6 +47,11 @@ void setup() {
   Serial.println();
   Serial.print("Connected, IP address: ");
   Serial.println(WiFi.localIP());
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("WiFi connected");
+  display.display();
 
   Firebase.begin(firebaseHost, firebaseAuth);
 }
@@ -45,6 +69,16 @@ void loop() {
   Serial.print(" °C, Humidity: ");
   Serial.print(h);
   Serial.println(" %");
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Temp: ");
+  display.print(t);
+  display.println(" C");
+  display.print("Hum:  ");
+  display.print(h);
+  display.println(" %");
+  display.display();
 
   Firebase.setFloat("/dht11/temperature", t);
   if (Firebase.failed()) {
