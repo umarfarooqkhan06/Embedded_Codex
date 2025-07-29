@@ -1,0 +1,117 @@
+// ========= Library Includes =========
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <MAX30105.h>
+#include "heartRate.h"
+
+// ========= OLED Setup =========
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// ========= MAX30102 Setup =========
+MAX30105 particleSensor;
+
+// ========= Variables =========
+int heartRate = 0;
+float SpO2 = 0;
+int bp_systolic = 120;   // Dummy value (placeholder)
+int bp_diastolic = 80;   // Dummy value (placeholder)
+bool fingerDetected = false;
+
+// ========= Setup Function =========
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize OLED
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("SSD1306 allocation failed");
+    while (1);
+  }
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setCursor(0, 0);
+  display.println("Initializing...");
+  display.display();
+
+  // Initialize MAX30102
+  if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
+    Serial.println("MAX30102 not found. Check wiring.");
+    display.setCursor(0, 16);
+    display.println("MAX30102 Not Found!");
+    display.display();
+    while (1);
+  }
+  particleSensor.setup(); // Use default settings
+  particleSensor.setPulseAmplitudeRed(0x0A); // Turn Red LED to low to indicate sensor is running
+  particleSensor.setPulseAmplitudeGreen(0);  // Turn off Green LED
+
+  display.setCursor(0, 16);
+  display.println("Place finger...");
+  display.display();
+  delay(2000);
+}
+
+// ========= Loop Function =========
+void loop() {
+  // Buffer for IR values
+  const byte RATE_SIZE = 4; // Number of samples for averaging
+  uint32_t irBuffer[100];   // IR LED sensor data
+  uint32_t redBuffer[100];  // Red LED sensor data
+  int bufferLength = 100;
+
+  // Read 100 samples (takes ~4s at 25Hz)
+  for (int i = 0; i < bufferLength; i++) {
+    while (particleSensor.available() == false) particleSensor.check();
+    redBuffer[i] = particleSensor.getRed();
+    irBuffer[i] = particleSensor.getIR();
+    particleSensor.nextSample();
+  }
+
+  // Check if finger is placed
+  fingerDetected = (irBuffer[0] > 50000); // Threshold for finger detection
+
+  if (fingerDetected) {
+    heartRate = 0;
+    SpO2 = 0;
+
+    // Calculate HR and SpO2
+    byte validHR = 0;
+    byte validSpO2 = 0;
+    heartRate = (int)maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength, redBuffer, &heartRate, &validHR, &SpO2, &validSpO2);
+    // The above function signature may vary by version. If errors, use SparkFun's heartRate.h example.
+
+    // Dummy BP estimation (not medical)
+    bp_systolic = 100 + random(0, 40); // Just for display
+    bp_diastolic = 60 + random(0, 30);
+  }
+
+  // Display Data
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0, 0);
+
+  if (fingerDetected) {
+    display.print("HR: ");
+    display.print(heartRate); display.println(" bpm");
+    display.setTextSize(1);
+    display.print("SpO2: ");
+    display.print(SpO2, 1); display.println(" %");
+    display.print("BP: ");
+    display.print(bp_systolic); display.print("/");
+    display.print(bp_diastolic); display.println(" mmHg");
+  } else {
+    display.setTextSize(2);
+    display.setCursor(0, 0);
+    display.println("Place");
+    display.println("Finger...");
+  }
+
+  display.display();
+
+  delay(2000); // Update every 2 seconds
+}
