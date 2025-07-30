@@ -44,6 +44,12 @@ int __io_putchar(int ch)
     return ch;
 }
 
+// Convenience helper for sending strings over UART2
+void UART2_SendString(const char *str)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t *)str, strlen(str), HAL_MAX_DELAY);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -76,6 +82,9 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART2_UART_Init();
+
+  // Indicate that UART2 is working
+  UART2_SendString("UART2 initialized\r\n");
 
   /* USER CODE BEGIN 2 */
 
